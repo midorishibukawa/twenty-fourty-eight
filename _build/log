@@ -1,0 +1,6 @@
+# dune init proj twenty_fourty_two
+# OCAMLPARAM: unset
+# Shared cache: disabled
+# Shared cache location: /home/midori/.local/cache/dune/db
+# Workspace root: /home/midori/dev/ocaml/twenty_fourty_two
+# Auto-detected concurrency: 6

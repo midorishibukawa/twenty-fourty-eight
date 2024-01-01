@@ -1,0 +1,4 @@
+(executable
+ (public_name twenty_fourty_two)
+ (name main)
+ (libraries twenty_fourty_two))
