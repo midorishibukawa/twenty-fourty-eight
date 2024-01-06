@@ -10,8 +10,13 @@ homepage: "https://github.com/username/reponame"
 doc: "https://url/to/documentation"
 bug-reports: "https://github.com/username/reponame/issues"
 depends: [
-  "ocaml"
+  "batteries"
+  "crunch"
+  "dream"
+  "dream-html"
   "dune" {>= "3.12"}
+  "ocaml"
+  "ppx_inline_test"
   "odoc" {with-doc}
 ]
 build: [

@@ -1,4 +1,15 @@
 (executable
  (public_name twenty_fourty_eight)
  (name main)
- (libraries twenty_fourty_eight))
+ (libraries twenty_fourty_eight dream dream-html))
+(rule
+  (target static.ml)
+ (deps (source_tree ./static/))
+  (action 
+    (with-stdout-to 
+      %{target}
+      (run ocaml-crunch --mode=plain ./static/))))
+(rule
+ (alias run)
+ (action
+  (run twenty_fourty_eight)))

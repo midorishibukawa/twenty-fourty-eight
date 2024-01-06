@@ -1,2 +1,3 @@
 (library
- (name twenty_fourty_eight))
+ (name twenty_fourty_eight)
+ (libraries batteries))

@@ -16,10 +16,18 @@
 (documentation https://url/to/documentation)
 
 (package
- (name twenty_fourty_two)
+ (name twenty_fourty_eight)
  (synopsis "A short synopsis")
  (description "A longer description")
- (depends ocaml dune)
+ (depends
+   batteries
+   crunch
+   dream
+   dream-html
+   dune
+   ocaml
+   ppx_inline_test
+   )
  (tags
   (topics "to describe" your project)))
 
