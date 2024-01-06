@@ -1,5 +1,10 @@
+open Batteries
 open Dream_html 
 open HTML 
+open Types
+
+module IntMap = Map.Make(Int)
+
 let page ~title:title_txt html_body =
     html [ lang "en" ] 
         [ head []
@@ -10,7 +15,9 @@ let page ~title:title_txt html_body =
             ; link  [ rel "stylesheet" ; href "static/style.css" ]
             ; script    [ src "https://unpkg.com/htmx.org@1.9.2" 
                         ; integrity "sha384-L6OqL9pRWyyFU3+/bjdSri+iIphTN/bvYyM37tICVyOJkWZLpP2vGn6VUEXgzg6h"
-                        ; crossorigin `anonymous ] ""]
+                        ; crossorigin `anonymous ] ""
+            ; script    [ src "https://unpkg.com/htmx.org/dist/ext/ws.js" ] ""
+            ; script    [ src "./static/ws.js" ] "" ]
         ; body [] 
             [ nav [] []
             ; html_body ] ] ;;
@@ -20,3 +27,16 @@ let article ctt =
         [ txt ~raw:true "%s" ctt ]
 
 let p ctt = p [] [ txt "%s" ctt ]
+
+let game g =
+    let ids = 
+        IntMap.of_list 
+        @@ List.map
+        (fun cell -> cell.location.x + cell.location.y * g.size, cell.value)
+        g.cells
+    in
+    section 
+        [ id "game" 
+        ; int_attr "data-size" g.size ]
+        (List.of_enum (0--(g.size * g.size - 1))
+        |> List.map (fun i -> div [] [txt "%s" @@ string_of_int @@ IntMap.find_default 0 i ids ]))
