@@ -1,6 +1,6 @@
 (lang dune 3.12)
 
-(name twenty_fourty_two)
+(name twenty_fourty_eight)
 
 (generate_opam_files true)
 
