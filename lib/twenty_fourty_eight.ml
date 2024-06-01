@@ -24,10 +24,15 @@ module Game(Params : GameParams) : Game = struct
 
     let () = Params.seed |> Option.map Random.init |? Random.self_init ();;
     let cell_qty = Params.size * Params.size;;
+
+    (** empty game structure, with both value and position lists empty *)
     let empty_game = { values = [] ; positions = [] };;
 
+    (** set of all possible positions a cell can have *)
     let all_pos_set = Enum.init cell_qty Fun.id |> IntSet.of_enum;;
 
+    (** map where all possible positions a cell can have are the keys,
+        while their cartesian coordinates are the values *)
     let all_pos_map =
         let rec get_div_mod ?(y=0) x =
             if x < Params.size
@@ -37,18 +42,23 @@ module Game(Params : GameParams) : Game = struct
         List.fold i_to_xy IntMap.empty (IntSet.elements all_pos_set);;
 
 
+    (** converts directions into axis *)
     let dir_to_axis dir =
         match dir with
         | Left | Right -> Horizontal
         | Up   | Down  -> Vertical;;
 
+    (** converts a tuple of list into a list of tuples *)
     let tup2_to_list (la, lb) = List.map2 (fun a b -> a, b) la lb;;
 
+    (** convverts a tuple of values and positions into a game structur *)
     let tup_to_game { values ; positions } (value, position) =
         { values = value::values
         ; positions = position::positions
         };;
     
+
+    (** generates a new cell with a value between 0 and 1 on any random empty space *)
     let generate_cell game =
         let { values ; positions } = game in
         let empty_pos = 
@@ -68,8 +78,12 @@ module Game(Params : GameParams) : Game = struct
         |> List.sort (fun (_, pos_a) (_, pos_b) -> pos_a - pos_b)
         |> List.fold tup_to_game empty_game;;
 
+    (** creates a new game with a single random cell *)
     let new_game () = generate_cell empty_game;;
 
+    (** move all cells into the given direction and generates a new cell,
+        return the new game state
+     *)
     let move dir game =
         let { values ; positions } = game in
         let axis = dir_to_axis dir in
