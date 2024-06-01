@@ -1,2 +1,5 @@
 _build/
-result/
+result
+*.coverage
+_coverage/
+cobertura.xml

@@ -11,9 +11,7 @@ doc: "https://url/to/documentation"
 bug-reports: "https://github.com/username/reponame/issues"
 depends: [
   "batteries"
-  "crunch"
-  "dream"
-  "dream-html"
+  "bisect_ppx"
   "dune" {>= "3.12"}
   "ocaml"
   "ppx_inline_test"

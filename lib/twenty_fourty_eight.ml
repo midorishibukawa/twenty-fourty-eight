@@ -1,142 +1,112 @@
 open Batteries
-open Types
-module Templates = Templates
+
+module IntSet = Set.Make(Int);;
+module IntMap = Map.Make(Int);;
+
+module type GameParams = sig
+    val size : int
+    val seed : int option
+end
+
+module type Game = sig
+    type direction = Up | Down | Left | Right
+    type axis = Horizontal | Vertical
+    type t = { values : int list ; positions : int list };;
+
+    val new_game : unit -> t
+    val move : direction -> t -> t
+end
+
+module Game(Params : GameParams) : Game = struct
+    type direction = Up | Down | Left | Right
+    type axis = Horizontal | Vertical
+    type t = { values : int list ; positions : int list };;
+
+    let () = Params.seed |> Option.map Random.init |? Random.self_init ();;
+    let cell_qty = Params.size * Params.size;;
+    let empty_game = { values = [] ; positions = [] };;
+
+    let all_pos_set = Enum.init cell_qty Fun.id |> IntSet.of_enum;;
+
+    let all_pos_map =
+        let rec get_div_mod ?(y=0) x =
+            if x < Params.size
+            then x, y
+            else get_div_mod ~y:(y + 1) (x - Params.size) in
+        let i_to_xy acc i = IntMap.add i (get_div_mod i) acc in
+        List.fold i_to_xy IntMap.empty (IntSet.elements all_pos_set);;
 
 
-let dir_to_axis dir =
-    match dir with
-    | Left | Right -> Horizontal
-    | Up   | Down  -> Vertical
+    let dir_to_axis dir =
+        match dir with
+        | Left | Right -> Horizontal
+        | Up   | Down  -> Vertical;;
 
-let inverse axis =
-    match axis with
-    | Horizontal -> Vertical 
-    | Vertical   -> Horizontal
+    let tup2_to_list (la, lb) = List.map2 (fun a b -> a, b) la lb;;
 
-let get_idx size loc = loc.x + size * loc.y
+    let tup_to_game { values ; positions } (value, position) =
+        { values = value::values
+        ; positions = position::positions
+        };;
+    
+    let generate_cell game =
+        let { values ; positions } = game in
+        let empty_pos = 
+            List.fold (flip IntSet.remove) all_pos_set positions 
+            |> IntSet.to_array in
+        if Array.length empty_pos = 0
+        then game
+        else
+        let new_pos =
+            empty_pos
+            |> Array.length
+            |> Random.int
+            |> Array.get empty_pos in 
+        let new_val = if Random.int 16 = 1 then 1 else 0 in
+        (new_val::values, new_pos::positions)
+        |> tup2_to_list
+        |> List.sort (fun (_, pos_a) (_, pos_b) -> pos_a - pos_b)
+        |> List.fold tup_to_game empty_game;;
 
-let loc_to_str size loc = Printf.sprintf "%d" @@ get_idx size loc
-let cell_to_str size cell = Printf.sprintf "%d,%s" cell.value @@ loc_to_str size cell.location
-let string_of_game game = 
-    let rec join sep = function 
-        | [] -> ""
-        | [str] -> str
-        | ""::strs -> join sep strs 
-        | str::strs -> str ^ sep ^ join sep strs in
-    Printf.sprintf "%d|%s" game.size 
-    @@ List.fold_left 
-        (fun acc cell -> join ";" [acc ;cell_to_str game.size cell]) 
-        "" 
-        game.cells
+    let new_game () = generate_cell empty_game;;
 
-let idx_to_loc size idx =
-    { x = idx mod size 
-    ; y = idx / size }
-
-let game_of_string msg =
-    let strs = String.split_on_char '|' msg in
-    let size = strs |> List.hd |> int_of_string in 
-    let cells = List.nth strs 1 in
-    let cells = String.split_on_char ';' cells in
-    let parse_cell cell =
-        let cell' = String.split_on_char ',' cell in 
-        let value = List.hd cell' in
-        let idx = List.nth cell' 1 in
-        { value = int_of_string value 
-        ; location = idx |> int_of_string |> idx_to_loc size } in
-    let cells = List.map parse_cell cells in
-    { size = size 
-    ; cells = cells }
-     
-
-let get_i_by_axis axis loc =
-    match axis with 
-    | Horizontal -> loc.x
-    | Vertical   -> loc.y
-
-let get_empty_cells game = 
-    let open List in 
-    let get_idx cell = get_idx game.size cell.location in
-    let cells = map get_idx game.cells in 
-    let cell_list = init (game.size * game.size) (fun i -> i) in 
-    let filter_cells i =
-        match find_opt (fun idx -> idx == i) cells with
-        | Some _ -> false 
-        | None   -> true in
-    let empty_cells = filter filter_cells cell_list in
-    Array.of_list empty_cells
-
-let generate_cell game =
-    let open Array in
-    let open Random in 
-    let empty_cells = get_empty_cells game in
-    let idx () = 
-        empty_cells 
-        |> length 
-        |> int 
-        |> (get empty_cells) in
-    let cell () =
-        { value = if int 16 == 0 then 2 else 1
-        ; location = idx_to_loc game.size @@ idx () } in
-    let cells = 
-        if length empty_cells == 0
-        then game.cells
-        else 
-            let get_idx = get_idx game.size in
-            let sort_by_idx a b = get_idx a.location - get_idx b.location in 
-            game.cells @ [cell()]
-        |> List.sort sort_by_idx in 
-    { size = game.size 
-    ; cells = cells }
-
-let new_game size =
-    let empty_game =
-        { size = size 
-        ; cells = [] } in
-    generate_cell empty_game
-
-let move dir game =
-    let open Array in
-    let empty_lines = make game.size [] in
-    let axis = dir_to_axis dir in
-    let get_i cell = get_i_by_axis axis cell.location in
-    let get_j cell = get_i_by_axis (inverse axis) cell.location in
-    let update_line line cell =
-        let i = get_i cell in
-        let j = length line in
-        let cell =
-            { value = cell.value
-            ; location = { x = i ; y = j } } in
-        let () = line.(i) <- line.(i) @ [cell] in 
-        line in
-    let fold_cells acc cell = acc @ [cell] in
-    let fold_lines acc line = acc @ List.fold_left fold_cells [] line in
-    let sort_by_j a b = get_j a - get_j b in
-    let cells' = 
-        List.fold_left update_line empty_lines game.cells 
-        |> map (List.sort sort_by_j) 
-        |> fold_left fold_lines [] in
-    let game' =
-        { size = game.size 
-        ; cells = cells' } in
-    generate_cell game'
-
-let handle_dir dir =
-    match dir with
-    | 'h' -> Left
-    | 'j' -> Down 
-    | 'k' -> Up 
-    | 'l' -> Right 
-    | _   -> Up
-
-let handle_message msg = 
-    match msg with 
-    | "init" -> string_of_game @@ new_game 4
-    | msg ->
-        let dir_game = String.split_on_char '.' msg in
-        let dir = List.hd dir_game in
-        let game = List.hd (List.tl dir_game) in
-        game
-        |> game_of_string 
-        |> move (handle_dir @@ String.get dir 0)
-        |> string_of_game 
+    let move dir game =
+        let { values ; positions } = game in
+        let axis = dir_to_axis dir in
+        let map_pos value pos = 
+            let select_i (x, y) = if axis = Vertical then x else y in
+            value, IntMap.find pos all_pos_map |> select_i in
+        let line_arr = Array.init Params.size (fun _ -> []) in
+        let update_arr arr (value, i) = 
+            arr.(i) <- value::arr.(i);
+            arr in
+        let dir_to_j' j =
+            match dir with
+            | Down | Right -> Params.size - j - 1
+            | Up   | Left  -> j in
+        let is_rev = dir = Down || dir = Right in
+        let rec arr_to_tuples ?(acc=[]) ?(j=0) i values =
+            let j' = dir_to_j' j in
+            let x, y = if axis = Vertical then i, j' else j', i in
+            let pos = y * Params.size + x in
+            match values with
+            | [] -> (if is_rev then Fun.id else List.rev) acc 
+            | value_a::value_b::values' ->
+                    let accd, values'' =
+                        if value_a = value_b
+                        then 1, values'
+                        else 0, value_b::values' in
+                    let acc = (value_a + accd, pos)::acc in
+                    arr_to_tuples ~acc ~j:(j + 1) i values''
+            | value_a::values'' -> 
+                    arr_to_tuples ~acc:((value_a, pos)::acc) ~j:(j + 1) i values''
+            in
+        List.map2 map_pos values positions
+        |> List.fold update_arr line_arr
+        |> Array.map (if is_rev then List.rev else Fun.id)
+        |> Array.mapi arr_to_tuples
+        |> Array.to_list
+        |> List.flatten
+        |> List.fold tup_to_game empty_game
+        |> generate_cell;;
+end

@@ -1,3 +1,4 @@
 (library
  (name twenty_fourty_eight)
- (libraries batteries dream-html))
+ (libraries batteries)
+ (instrumentation (backend bisect_ppx)))
