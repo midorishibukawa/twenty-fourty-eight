@@ -13,8 +13,8 @@ run:
 
 .PHONY: test
 test:
-	export BISECT_FILE=${PWD}/cobertura
-	dune runtest --instrument-with bisect_ppx --force
+	export BISECT_FILE=${PWD}/cobertura && \
+	dune runtest --instrument-with bisect_ppx --force && \
 	bisect-ppx-report summary
 
 watch:
