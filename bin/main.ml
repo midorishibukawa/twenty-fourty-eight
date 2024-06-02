@@ -24,9 +24,9 @@ let rec main ?(game = Game.new_game ()) () =
         let map = List.fold_left2 (fun acc v p -> IntMap.add p v acc) IntMap.empty game.values game.positions in
         let to_str str i =
             let s = IntMap.find_opt i map |> Option.map string_of_int |? " " in
-            let br = if (i + 1) mod Params.size = 0 then "\n\t|\t" else "" in 
-            Printf.sprintf "%s%s\t|\t%s" str s br in
-        Enum.fold to_str "\n\n\n\n\n\n\t|\t" enum
+            let br = if (i + 1) mod Params.size = 0 then "\n" else "" in 
+            Printf.sprintf "%s%s\t%s" str s br in
+        Enum.fold to_str (String.repeat "\n" 48) enum
         in
     IO.write_string stdout (game_str ^ "\n");
     IO.flush_all ();
