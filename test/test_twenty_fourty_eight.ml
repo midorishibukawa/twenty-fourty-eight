@@ -13,9 +13,8 @@ let bottom_row i = GameParams.size * (GameParams.size - 1) + i;;
 let right_col i = GameParams.size * (i + 1) - 1;;
 let left_col = ( * ) GameParams.size;;
 
-let map2cell : int -> int -> Game.cell  = fun value position -> { value ; position };;
+let map2cell value position = Game.({ value ; position });;
 
-let get_pos : Game.cell -> int = fun { position ; _ } -> position;;
 
 let test_move dir starting_f expected_f =
     let positions = List.init GameParams.size starting_f in
@@ -28,6 +27,7 @@ let test_move dir starting_f expected_f =
     let check_val : Game.cell -> bool = fun { value ; _ } -> value = 0 || value = 1 in 
     let assert_values = List.for_all check_val game' in
     let assert_positions =
+        let get_pos Game.({ position ; _ }) = position in
         let actual = game' |> List.map get_pos |> IntSet.of_list in
         IntSet.subset expected actual in
     assert_length

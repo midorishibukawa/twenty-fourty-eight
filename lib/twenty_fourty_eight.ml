@@ -30,7 +30,7 @@ module Game(Params : GameParams) : Game = struct
     let empty_game = [];;
 
     (** set of all possible positions a cell can have *)
-    let all_pos_set = Enum.init cell_qty Fun.id |> IntSet.of_enum;;
+    let all_pos_set = 0 --^ cell_qty |> IntSet.of_enum;;
 
     (** map where all possible positions a cell can have are the keys,
         while their cartesian coordinates are the values *)
@@ -41,14 +41,6 @@ module Game(Params : GameParams) : Game = struct
             else get_div_mod ~y:(y + 1) (x - Params.size) in
         let i_to_xy acc i = IntMap.add i (get_div_mod i) acc in
         List.fold i_to_xy IntMap.empty (IntSet.elements all_pos_set);;
-
-
-    (** converts directions into axis *)
-    let dir_to_axis dir =
-        match dir with
-        | Left | Right -> Horizontal
-        | Up   | Down  -> Vertical;;
-
 
     (** generates a new cell with a value between 0 and 1 on any random empty space *)
     let generate_cell game =
@@ -76,12 +68,14 @@ module Game(Params : GameParams) : Game = struct
         return the new game state
      *)
     let move dir game =
-        let axis = dir_to_axis dir in
-        let map_pos { value ; position } = 
-            let select_i (x, y) = if axis = Vertical then x else y in
-            value, IntMap.find position all_pos_map |> select_i in
+        let axis =
+            match dir with
+            | Left | Right -> Horizontal
+            | Up   | Down  -> Vertical in
         let line_arr = Array.init Params.size (fun _ -> []) in
-        let update_arr arr (value, i) = 
+        let update_arr arr { value ; position } = 
+            let select_i (x, y) = if axis = Vertical then x else y in
+            let i = IntMap.find position all_pos_map |> select_i in
             arr.(i) <- value::arr.(i);
             arr in
         let dir_to_j' j =
@@ -109,7 +103,6 @@ module Game(Params : GameParams) : Game = struct
                     arr_to_cells ~acc ~j i values''
             in
         game
-        |> List.map map_pos 
         |> List.fold update_arr line_arr
         |> Array.map (if is_rev then List.rev else Fun.id)
         |> Array.mapi arr_to_cells
