@@ -3,25 +3,30 @@ open Batteries
 module IntSet = Set.Make(Int);;
 module IntMap = Map.Make(Int);;
 
-module type GameParams = sig
-    val size : int
-    val seed : int option
-end
 
 module type Game = sig
     type direction = Up | Down | Left | Right
     type cell = { value : int ; position : int } 
-    type t = cell list;;
+    type t = cell list
 
     val new_game : unit -> t
     val move : direction -> t -> t
+end
+
+module type GameParams = sig
+    (** defines the size of the game board *)
+    val size : int
+
+    (** defines the seed for the `Random.init` call. 
+        if `None`, will call `Random.self_init` instead. *)
+    val seed : int option
 end
 
 module Game(Params : GameParams) : Game = struct
     type direction = Up | Down | Left | Right
     type axis = Horizontal | Vertical
     type cell = { value : int ; position : int } 
-    type t = cell list;;
+    type t = cell list
 
     let () = Params.seed |> Option.map Random.init |? Random.self_init ();;
     let cell_qty = Params.size * Params.size;;
@@ -40,9 +45,12 @@ module Game(Params : GameParams) : Game = struct
             then x, y
             else get_div_mod ~y:(y + 1) (x - Params.size) in
         let i_to_xy acc i = IntMap.add i (get_div_mod i) acc in
-        List.fold i_to_xy IntMap.empty (IntSet.elements all_pos_set);;
+        all_pos_set
+        |> IntSet.elements
+        |> List.fold i_to_xy IntMap.empty;;
 
-    (** generates a new cell with a value between 0 and 1 on any random empty space *)
+    (** generates a new cell with a value between 0 and 1 
+        on any random empty space *)
     let generate_cell game =
         let empty_pos =
             game
