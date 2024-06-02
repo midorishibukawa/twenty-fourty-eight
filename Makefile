@@ -17,5 +17,10 @@ test:
 	dune runtest --instrument-with bisect_ppx --force && \
 	bisect-ppx-report summary
 
+test-html:
+	export BISECT_FILE=${PWD}/cobertura && \
+	dune runtest --instrument-with bisect_ppx --force && \
+	bisect-ppx-report html
+
 watch:
 	dune build -w @run
