@@ -10,7 +10,6 @@ end
 
 module type Game = sig
     type direction = Up | Down | Left | Right
-    type axis = Horizontal | Vertical
     type t = { values : int list ; positions : int list };;
 
     val new_game : unit -> t
