@@ -21,7 +21,8 @@ let get_char () =
 let rec main ?(game = Game.new_game ()) () =
     let game_str =
         let enum = 0 -- (Params.size * Params.size - 1) in
-        let map = List.fold_left2 (fun acc v p -> IntMap.add p v acc) IntMap.empty game.values game.positions in
+        let build_map : int IntMap.t -> Game.cell -> int IntMap.t = fun acc { value ; position } -> IntMap.add position value acc in
+        let map = List.fold build_map IntMap.empty game in
         let to_str str i =
             let s = IntMap.find_opt i map |> Option.map string_of_int |? " " in
             let br = if (i + 1) mod Params.size = 0 then "\n" else "" in 
