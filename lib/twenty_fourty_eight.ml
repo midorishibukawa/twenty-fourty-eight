@@ -1,7 +1,7 @@
 open Batteries
 
-module IntSet = Set.Make(Int);;
-module IntMap = Map.Make(Int);;
+module IntSet = Set.Make(Int)
+module IntMap = Map.Make(Int)
 
 
 module type Game = sig
