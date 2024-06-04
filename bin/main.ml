@@ -18,7 +18,14 @@ let get_char () =
     Unix.tcsetattr Unix.stdin Unix.TCSADRAIN termio;
     res;;
 
-let rec main ?(game = Game.new_game ()) () =
+let rec main ?(game_state = Game.new_game (), Game.Playing) () =
+    let game, state = game_state in
+    let state' =
+        let open Game in
+        match state with
+        | GameWon -> "WIN"
+        | GameOver -> "GAME OVER! Press \"r\" to restart"
+        | Playing -> "PLAYING..." in
     let game_str =
         let enum = 0 -- (Params.size * Params.size - 1) in
         let build_map : int IntMap.t -> Game.cell -> int IntMap.t = fun acc { value ; position } -> IntMap.add position value acc in
@@ -29,15 +36,21 @@ let rec main ?(game = Game.new_game ()) () =
             Printf.sprintf "%s%s\t%s" str s br in
         Enum.fold to_str (String.repeat "\n" 48) enum
         in
-    IO.write_string stdout (game_str ^ "\n");
+    IO.write_string stdout (game_str ^ state');
     IO.flush_all ();
     let open Game in
     match get_char () with
-    | 'w' -> main ~game:(move Up game) () 
-    | 'a' -> main ~game:(move Left game) ()
-    | 's' -> main ~game:(move Down game) ()
-    | 'd' -> main ~game:(move Right game) ()
+    | 'w' -> main ~game_state:(move Up game) () 
+    | 'a' -> main ~game_state:(move Left game) ()
+    | 's' -> main ~game_state:(move Down game) ()
+    | 'd' -> main ~game_state:(move Right game) ()
     | ';' -> ()
-    | _ -> main ~game ();;
+    | 'r' -> 
+            let game_state = 
+                if state = GameOver 
+                then new_game (), Playing 
+                else game_state in
+            main ~game_state ()
+    | _ -> main ~game_state ();;
 
 main ()
