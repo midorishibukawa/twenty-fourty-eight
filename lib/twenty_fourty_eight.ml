@@ -120,10 +120,11 @@ module Game(Params : GameParams) : Game = struct
                 List.fold update_pos opt_arr game in
             let max, over = 
                 List.fold_left (check_cells game_arr) (0, true) game in
-            match over, max >= 9 with
-            | true,     _ -> Over
-            | false, true -> Won
-            | false, false -> Playing in 
+            if over
+            then Over
+            else if max >= 9
+            then Won
+            else Playing in
         game, state
 
     (** creates a new game with a single random cell *)
