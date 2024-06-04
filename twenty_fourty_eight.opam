@@ -6,9 +6,9 @@ maintainer: ["midori shibukawa"]
 authors: ["midori shibukawa"]
 license: "LICENSE"
 tags: ["ocaml" "gamedev"]
-homepage: "https://gitlab.com/the-witching-hour/twenty-fourty-eight.git"
-doc: "https://gitlab.com/the-witching-hour/twenty-fourty-eight/-/wikis/home"
-bug-reports: "https://gitlab.com/the-witching-hour/twenty-fourty-eight/-/issues"
+homepage: "https://gitlab.com/midorishibukawa/twenty-fourty-eight.git"
+doc: "https://gitlab.com/midorishibukawa/twenty-fourty-eight/-/wikis/home"
+bug-reports: "https://gitlab.com/midorishibukawa/twenty-fourty-eight/-/issues"
 depends: [
   "batteries"
   "bisect_ppx" {with-test}
@@ -31,4 +31,4 @@ build: [
     "@doc" {with-doc}
   ]
 ]
-dev-repo: "git+https://gitlab.com/the-witching-hour/twenty-fourty-eight.git"
+dev-repo: "git+https://gitlab.com/midorishibukawa/twenty-fourty-eight.git"
