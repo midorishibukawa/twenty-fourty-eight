@@ -41,6 +41,10 @@ module Game(Params : GameParams) : Game = struct
 
     (** set of all possible positions a cell can have *)
     let all_pos_set = 0 --^ cell_qty |> IntSet.of_enum
+    
+    let get_pos { position ; _ } = position
+
+    let get_val { value ; _ } = value
 
     let rec xy_of_idx ?(y=0) x =
         if x < Params.size
@@ -62,7 +66,7 @@ module Game(Params : GameParams) : Game = struct
     let generate_cell game =
         let empty_pos =
             game
-            |> List.map (fun { position ; _ } -> position)
+            |> List.map get_pos
             |> List.fold (flip IntSet.remove) all_pos_set
             |> IntSet.to_array in
         if Array.length empty_pos = 0
@@ -83,7 +87,7 @@ module Game(Params : GameParams) : Game = struct
             let game_won ?(state=Playing) game =
                 let max = 
                     game 
-                    |> List.map (fun { value ; _ } -> value) 
+                    |> List.map get_val
                     |> List.max in
                 if max >= 9
                 then Won
@@ -169,9 +173,7 @@ module Game(Params : GameParams) : Game = struct
                     let j = j + 1 in
                     arr_to_cells ~acc ~j i values''
             in
-        let set_of_game =
-            IntSet.of_list 
-            % List.map (fun { position ; _ } -> position)  in
+        let set_of_game = IntSet.of_list % List.map get_pos  in
         let game_set = set_of_game game in
         let generate_cell_if_moved game' =
             if IntSet.equal game_set (set_of_game game')
