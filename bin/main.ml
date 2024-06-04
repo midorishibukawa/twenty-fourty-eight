@@ -23,8 +23,8 @@ let rec main ?(game_state = Game.new_game (), Game.Playing) () =
     let state' =
         let open Game in
         match state with
-        | GameWon -> "WIN"
-        | GameOver -> "GAME OVER! Press \"r\" to restart"
+        | Won -> "WIN"
+        | Over -> "GAME OVER! Press \"r\" to restart"
         | Playing -> "PLAYING..." in
     let game_str =
         let enum = 0 -- (Params.size * Params.size - 1) in
@@ -36,7 +36,7 @@ let rec main ?(game_state = Game.new_game (), Game.Playing) () =
             Printf.sprintf "%s%s\t%s" str s br in
         Enum.fold to_str (String.repeat "\n" 48) enum
         in
-    IO.write_string stdout (game_str ^ state');
+    IO.write_string stdout (game_str ^ "\n" ^ state');
     IO.flush_all ();
     let open Game in
     match get_char () with
@@ -47,7 +47,7 @@ let rec main ?(game_state = Game.new_game (), Game.Playing) () =
     | ';' -> ()
     | 'r' -> 
             let game_state = 
-                if state = GameOver 
+                if state = Over 
                 then new_game (), Playing 
                 else game_state in
             main ~game_state ()

@@ -6,7 +6,7 @@ module IntMap = Map.Make(Int);;
 
 module type Game = sig
     type direction = Up | Down | Left | Right
-    type state = GameWon | GameOver | Playing
+    type state = Won | Over | Playing
     type cell = { value : int ; position : int } 
     type t = cell list
 
@@ -26,7 +26,7 @@ end
 module Game(Params : GameParams) : Game = struct
     type direction = Up | Down | Left | Right
     type axis = Horizontal | Vertical
-    type state = GameWon | GameOver | Playing
+    type state = Won | Over | Playing
     type cell = { value : int ; position : int } 
     type t = cell list
 
@@ -76,6 +76,8 @@ module Game(Params : GameParams) : Game = struct
         let value = if Random.int 16 = 0 then 1 else 0 in
         { value ; position }::game
 
+    (** receives a game structure and returns a tuple 
+        of that same structure and the state of the game *)
     let get_state game =
         let state =
             let game_won ?(state=Playing) game =
@@ -84,33 +86,32 @@ module Game(Params : GameParams) : Game = struct
                     |> List.map (fun { value ; _ } -> value) 
                     |> List.max in
                 if max >= 9
-                then GameWon
+                then Won
                 else state in
             let max_length = List.length game = 16 in
             if not max_length
             then game_won game
             else
-                let check_cells game (max, over) cell =
+            let check_cells game (max, over) cell =
                 let { value ; position } = cell in
                 let x, y = xy_of_idx position in
-                let are_coordinates_valid (x, y) = 
+                let are_coordinates_valid (x, y) (dx, dy) = 
                     let is_coordinate_valid coordinate = 
                         coordinate >= 0 && coordinate < Params.size in
-                    is_coordinate_valid x && is_coordinate_valid y in
+                    let x', y' = x + dx, y + dy in
+                    if is_coordinate_valid x' && is_coordinate_valid y'
+                    then Some (x', y')
+                    else None in
+                let cant_move_in_dir opt = 
+                    Option.map ((!=) value) opt |? false in
                 let no_moves = 
                     [ -1,  0 ;  1,  0
                     ;  0, -1 ;  0,  1
                     ]
-                    |> List.map (fun (dx, dy) -> x + dx, y + dy)
-                    |> List.filter are_coordinates_valid
-                    |> List.map idx_of_xy
-                    |> List.map (Array.get game)
-                    |> List.for_all (fun opt -> 
-                        match opt with
-                        | None -> false 
-                        | Some value' ->  value' != value) in
-                Int.max max value, if not no_moves then false else over
-            in
+                    |> List.filter_map @@ are_coordinates_valid (x, y)
+                    |> List.map @@ Array.get game % idx_of_xy
+                    |> List.for_all cant_move_in_dir in
+                Int.max max value, no_moves && over in
             let game_arr =
                 let opt_arr = Array.make cell_qty None in
                 let update_pos acc { value ; position } =
@@ -119,11 +120,10 @@ module Game(Params : GameParams) : Game = struct
                 List.fold update_pos opt_arr game in
             let max, over = 
                 List.fold_left (check_cells game_arr) (0, true) game in
-            if over
-            then GameOver
-            else if max >= 9
-            then GameWon
-            else Playing in
+            match over, max >= 9 with
+            | true,     _ -> Over
+            | false, true -> Won
+            | false, false -> Playing in 
         game, state
 
     (** creates a new game with a single random cell *)
