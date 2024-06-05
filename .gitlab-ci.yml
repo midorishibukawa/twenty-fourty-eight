@@ -1,0 +1,36 @@
+
+image: nixpkgs/nix-flakes:latest
+stages:
+  - build
+  - deploy
+variables:
+  CACHIX_CACHE_NAME: midorishibukawa-ml
+  PROJECT_NAME: twenty_fourty_eight 
+  IMAGE_TAG: 0.day9
+  
+.before_script_cachix:
+  before_script:
+    - nix profile install --accept-flake-config nixpkgs#cachix
+    - cachix use "$CACHIX_CACHE_NAME"
+build:
+  stage: build
+  extends: .before_script_cachix
+  artifacts:
+    paths:
+      - twenty_fourty_eight
+  script:
+    - cachix watch-exec $CACHIX_CACHE_NAME -- nix build .#prd
+    - cp ./result/bin/$PROJECT_NAME .
+test:
+  stage: build_app
+  extends: .before_script_cachix
+  coverage: '/Coverage: \d*\/\d* \((.*)%\)/'
+  artifacts:
+    reports:
+      coverage_report:
+        coverage_format: cobertura
+        path: cobertura.xml
+  script:
+    - export BISECT_FILE=${PWD}/cobertura
+    - cachix watch-exec $CACHIX_CACHE_NAME -- nix develop -c dune runtest --instrument-with bisect_ppx --force
+    - nix develop -c bisect-ppx-report summary
