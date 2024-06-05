@@ -18,7 +18,7 @@ build:
     paths:
       - twenty_fourty_eight
   script:
-    - cachix watch-exec $CACHIX_CACHE_NAME -- nix build .#prd
+    - cachix watch-exec $CACHIX_CACHE_NAME -- make build_static
     - cp ./result/bin/$PROJECT_NAME .
 test:
   stage: build_bin
@@ -31,5 +31,5 @@ test:
         path: cobertura.xml
   script:
     - export BISECT_FILE=${PWD}/cobertura
-    - cachix watch-exec $CACHIX_CACHE_NAME -- nix develop -c dune runtest --instrument-with bisect_ppx --force
-    - nix develop -c bisect-ppx-report summary
+    - cachix watch-exec $CACHIX_CACHE_NAME -- nix develop -c make test
+    - nix develop -c bisect-ppx-report cobertura cobertura.xml
