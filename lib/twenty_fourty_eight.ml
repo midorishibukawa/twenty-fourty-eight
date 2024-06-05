@@ -150,13 +150,12 @@ module Game(Params : GameParams) : Game = struct
             let i = IntMap.find position all_pos_map |> select_i in
             arr.(i) <- value::arr.(i);
             arr in
-        let get_j' j =
-            match dir with
-            | Down | Right -> Params.size - j - 1
-            | Up   | Left  -> j in
         let is_rev = dir = Down || dir = Right in
         let rec arr_to_cells ?(acc=[]) ?(j=0) i values =
-            let j' = get_j' j in
+            let j' = 
+                match dir with
+                | Down | Right -> Params.size - j - 1
+                | Up   | Left  -> j in
             let x, y = if axis = Vertical then i, j' else j', i in
             let position = y * Params.size + x in
             match values with
