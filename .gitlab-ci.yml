@@ -1,4 +1,3 @@
-
 image: nixpkgs/nix-flakes:latest
 stages:
   - build
