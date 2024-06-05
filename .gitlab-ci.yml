@@ -1,6 +1,6 @@
 image: nixpkgs/nix-flakes:latest
 stages:
-  - build
+  - build_bin
   - deploy
 variables:
   CACHIX_CACHE_NAME: midorishibukawa-ml
@@ -12,7 +12,7 @@ variables:
     - nix profile install --accept-flake-config nixpkgs#cachix
     - cachix use "$CACHIX_CACHE_NAME"
 build:
-  stage: build
+  stage: build_bin
   extends: .before_script_cachix
   artifacts:
     paths:
@@ -21,7 +21,7 @@ build:
     - cachix watch-exec $CACHIX_CACHE_NAME -- nix build .#prd
     - cp ./result/bin/$PROJECT_NAME .
 test:
-  stage: build
+  stage: build_bin
   extends: .before_script_cachix
   coverage: '/Coverage: \d*\/\d* \((.*)%\)/'
   artifacts:
