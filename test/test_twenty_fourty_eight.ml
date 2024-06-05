@@ -22,7 +22,7 @@ let test_move dir ?(cell_qty=size) starting_f expected_f =
     let expected = List.init GameParams.size expected_f |> IntSet.of_list in
     let values = List.make GameParams.size 0 in
     let game = List.map2 map2cell values positions in
-    let game' = Game.move dir game in
+    let game', _ = Game.move dir game in
     let assert_length = List.length game' = cell_qty in
     let check_val Game.({ value ; _ }) = value = 0 || value = 1 in 
     let assert_values = List.for_all check_val game' in
@@ -61,7 +61,7 @@ let%test "merge simple" =
     let values = [0 ; 0] in
     let positions = [0 ; 1] in
     let game = List.map2 map2cell values positions in
-    let game' = Game.move Game.Left game in
+    let game', _ = Game.move Game.Left game in
     let assert_length = List.length game' = 2 in
     assert_length
 
@@ -69,7 +69,26 @@ let%test "merge middle" =
     let values = [0 ; 1 ; 1 ; 0] in
     let positions = [0 ; 1 ; 2 ; 3] in
     let game = List.map2 map2cell values positions in
-    let game' = Game.move Game.Right game in
+    let game', _ = Game.move Game.Right game in
     let assert_length = List.length game' = 4 in 
     assert_length
 
+let%test "game win" =
+    let values = [8 ; 8] in
+    let positions = [0; 1] in
+    let game = List.map2 map2cell values positions in
+    let game', state = Game.move Game.Left game in
+    let assert_length = List.length game' = 2 in
+    let assert_state = Game.Won = state in 
+    assert_length
+    && assert_state
+
+let%test "game over" =
+    let values = 0 --^ size * size |> List.of_enum in
+    let positions = values in
+    let game = List.map2 map2cell values positions in
+    let game', state = Game.move Game.Down game in
+    let assert_length = List.length game' = size * size in
+    let assert_state = Game.Over = state in
+    assert_length
+    && assert_state

@@ -3,14 +3,13 @@ open Batteries
 module IntSet = Set.Make(Int)
 module IntMap = Map.Make(Int)
 
-
 module type Game = sig
     type direction = Up | Down | Left | Right
+    type state = Won | Over | Playing
     type cell = { value : int ; position : int } 
     type t = cell list
-
     val new_game : unit -> t
-    val move : direction -> t -> t
+    val move : direction -> t -> t * state
 end
 
 module type GameParams = sig
@@ -25,30 +24,34 @@ end
 module Game(Params : GameParams) : Game = struct
     type direction = Up | Down | Left | Right
     type axis = Horizontal | Vertical
+    type state = Won | Over | Playing
     type cell = { value : int ; position : int } 
     type t = cell list
 
-    (** initialises the Random module according to the
-        passed Params *)
     let () = 
-        Option.map Random.init Params.seed 
+        Option.map Random.init Params.seed
         |? Random.self_init ()
 
     let cell_qty = Params.size * Params.size
 
-    (** empty game structure, with both 
-        value and position lists empty *)
+
+    (** empty game structure, 
+        with both value and position lists empty *)
     let empty_game = []
 
-    let get_pos { position ; _ } = position
+
+    (** set of all possible positions a cell can have *)
+    let all_pos_set = 0 --^ cell_qty |> IntSet.of_enum
     
+    let get_pos { position ; _ } = position
+    let get_val { value ; _ } = value
     let rec xy_of_idx ?(y=0) x =
         if x < Params.size
         then x, y
         else xy_of_idx ~y:(y + 1) (x - Params.size)
     
-    (** set of all possible positions a cell can have *)
-    let all_pos_set = 0 --^ cell_qty |> IntSet.of_enum
+    let idx_of_xy (x, y) = y * Params.size + x
+
 
     (** map where all possible positions a cell can have are the keys,
         while their cartesian coordinates are the values *)
@@ -58,14 +61,18 @@ module Game(Params : GameParams) : Game = struct
         |> IntSet.elements
         |> List.fold i_to_xy IntMap.empty
 
-    (** generates a new cell with a value
-        between 0 and 1 on any random empty space *)
+
+    (** generates a new cell with a value between 0 and 1 
+        on any random empty space *)
     let generate_cell game =
         let empty_pos =
             game
-            |> List.map (fun { position ; _ } -> position)
+            |> List.map get_pos
             |> List.fold (flip IntSet.remove) all_pos_set
             |> IntSet.to_array in
+        if Array.length empty_pos = 0
+        then game
+        else
         let position =
             empty_pos
             |> Array.length
@@ -74,8 +81,59 @@ module Game(Params : GameParams) : Game = struct
         let value = if Random.int 16 = 0 then 1 else 0 in
         { value ; position }::game
 
+
+    (** receives a game structure its current state *)
+    let get_state game =
+        let game_won ?(state=Playing) game =
+            let max = 
+                game 
+                |> List.map get_val
+                |> List.max in
+            if max >= 9
+            then Won
+            else state in
+        let max_length = List.length game = 16 in
+        if not max_length
+        then game_won game
+        else
+        let check_cells game (max, over) cell =
+            let { value ; position } = cell in
+            let x, y = xy_of_idx position in
+            let are_coordinates_valid (x, y) (dx, dy) = 
+                let is_coordinate_valid coordinate = 
+                    coordinate >= 0 && coordinate < Params.size in
+                let x', y' = x + dx, y + dy in
+                if is_coordinate_valid x' && is_coordinate_valid y'
+                then Some (x', y')
+                else None in
+            let cant_move_in_dir opt = 
+                Option.map ((!=) value) opt |? false in
+            let no_moves = 
+                [ -1,  0 ;  1,  0
+                ;  0, -1 ;  0,  1
+                ]
+                |> List.filter_map @@ are_coordinates_valid (x, y)
+                |> List.map @@ Array.get game % idx_of_xy
+                |> List.for_all cant_move_in_dir in
+            Int.max max value, no_moves && over in
+        let game_arr =
+            let opt_arr = Array.make cell_qty None in
+            let update_pos acc { value ; position } =
+                acc.(position) <- Some value;
+                acc in
+            List.fold update_pos opt_arr game in
+        let max, over = 
+            List.fold_left (check_cells game_arr) (0, true) game in
+        if over
+        then Over
+        else if max >= 9
+        then Won
+        else Playing
+
+
     (** creates a new game with a single random cell *)
     let new_game () = generate_cell empty_game
+
 
     (** moves all cells into the given direction,
         generates a new cell,
@@ -122,12 +180,14 @@ module Game(Params : GameParams) : Game = struct
             if IntSet.equal game_set (set_of_game game')
             then game'
             else generate_cell game' in
-        game
-        |> List.fold update_arr line_arr
-        |> Array.map (if is_rev then Fun.id else List.rev)
-        |> Array.mapi arr_to_cells
-        |> Array.to_list
-        |> List.flatten
-        |> generate_cell_if_moved
-        |> List.sort (fun a b -> a.position - b.position)
+        let game' =
+            game
+            |> List.fold update_arr line_arr
+            |> Array.map (if is_rev then Fun.id else List.rev)
+            |> Array.mapi arr_to_cells
+            |> Array.to_list
+            |> List.flatten
+            |> generate_cell_if_moved
+            |> List.sort (fun a b -> a.position - b.position) in
+        game', get_state game'
 end
