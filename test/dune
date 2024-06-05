@@ -1,2 +1,5 @@
-(test
- (name test_twenty_fourty_two))
+(library
+ (name test_twenty_fourty_eight)
+ (libraries twenty_fourty_eight)
+ (inline_tests)
+ (preprocess (pps ppx_inline_test)))

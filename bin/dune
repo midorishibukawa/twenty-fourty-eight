@@ -1,4 +1,8 @@
 (executable
- (public_name twenty_fourty_two)
+ (public_name twenty_fourty_eight)
  (name main)
- (libraries twenty_fourty_two))
+ (libraries twenty_fourty_eight batteries))
+(rule
+ (alias run)
+ (action
+  (run twenty_fourty_eight)))
