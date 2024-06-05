@@ -92,3 +92,24 @@ let%test "game over" =
     let assert_state = Game.Over = state in
     assert_length
     && assert_state
+
+let%test "playing board full" =
+    let values = 0 --^ size * size |> Enum.map (fun i -> i / size) |> List.of_enum in
+    let positions = 0 --^ size * size |> List.of_enum in
+    let game = List.map2 map2cell values positions in
+    let game', state = Game.move Game.Up game in
+    let assert_length = List.length game' = size * size in
+    let assert_state = Game.Playing = state in
+    assert_length
+    && assert_state
+
+let%test "playing board full" =
+    let values = 0 --^ size * size |> Enum.map (fun i -> (i / size) * 4) |> List.of_enum in
+    let positions = 0 --^ size * size |> List.of_enum in
+    let game = List.map2 map2cell values positions in
+    let game', state = Game.move Game.Up game in
+    let assert_length = List.length game' = size * size in
+    let assert_state = Game.Won = state in
+    assert_length
+    && assert_state
+
