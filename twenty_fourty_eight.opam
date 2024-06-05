@@ -12,7 +12,9 @@ bug-reports: "https://gitlab.com/midorishibukawa/twenty-fourty-eight/-/issues"
 depends: [
   "batteries"
   "dune" {>= "3.12"}
+  "bisect_ppx"
   "ocaml"
+  "ppx_inline_test"
   "odoc" {with-doc}
 ]
 build: [
