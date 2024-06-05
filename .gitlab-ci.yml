@@ -21,7 +21,7 @@ build:
     - cachix watch-exec $CACHIX_CACHE_NAME -- nix build .#prd
     - cp ./result/bin/$PROJECT_NAME .
 test:
-  stage: build_app
+  stage: build
   extends: .before_script_cachix
   coverage: '/Coverage: \d*\/\d* \((.*)%\)/'
   artifacts:
