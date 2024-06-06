@@ -82,7 +82,7 @@ module Game(Params : GameParams) : Game = struct
         { value ; position }::game
 
 
-    (** receives a game structure its current state *)
+    (** receives a game structure and returns its current state *)
     let get_state game =
         let max_length = List.length game = 16 in
         if not max_length
