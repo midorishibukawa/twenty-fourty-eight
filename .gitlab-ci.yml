@@ -17,7 +17,6 @@ build_n_test:
   artifacts:
     paths:
       - public
-      - twenty_fourty_eight
     reports:
       coverage_report:
         coverage_format: cobertura
