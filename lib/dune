@@ -1,4 +1,5 @@
 (library
- (name twenty_fourty_eight)
- (libraries batteries)
- (instrumentation (backend bisect_ppx)))
+  (public_name twenty_fourty_eight)
+  (name twenty_fourty_eight)
+  (libraries batteries)
+  (instrumentation (backend bisect_ppx)))

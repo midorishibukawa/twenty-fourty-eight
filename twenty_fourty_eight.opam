@@ -15,7 +15,7 @@ depends: [
   "bisect_ppx"
   "ocaml"
   "ppx_inline_test"
-  "odoc" {with-doc}
+  "odoc"
 ]
 build: [
   ["dune" "subst"] {dev}

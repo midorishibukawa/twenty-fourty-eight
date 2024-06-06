@@ -12,11 +12,7 @@ module type Game = sig
 end
 
 module type GameParams = sig
-    (** defines the size of the game board *)
     val size : int
-
-    (** defines the seed for the `Random.init` call. 
-        if `None`, will call `Random.self_init` instead. *)
     val seed : int option
 end
 
@@ -27,33 +23,35 @@ module Game(Params : GameParams) : Game = struct
     type cell = { value : int ; position : int } 
     type t = cell list
 
+    (** Initializes the game RNG.  *)
     let () = 
         Option.map Random.init Params.seed
         |? Random.self_init ()
 
     let cell_qty = Params.size * Params.size
 
-
-    (** empty game structure, 
-        with both value and position lists empty *)
+    (** Empty game structure. Alias of an empty `List`. *)
     let empty_game = []
 
-
-    (** set of all possible positions a cell can have *)
+    (** Set of all possible positions a cell can have. *)
     let all_pos_set = 0 --^ cell_qty |> IntSet.of_enum
     
+    (** Receives a cell and returns its position. *)
     let get_pos { position ; _ } = position
+
+    (** Receives a cell and returns its value. *)
     let get_val { value ; _ } = value
     let rec xy_of_idx ?(y=0) x =
         if x < Params.size
         then x, y
         else xy_of_idx ~y:(y + 1) (x - Params.size)
-    
+   
+    (** Receives a tuple of coordinates 
+        and returns its corresponding index. *)
     let idx_of_xy (x, y) = y * Params.size + x
 
-
-    (** map where all possible positions a cell can have are the keys,
-        while their cartesian coordinates are the values *)
+    (** Array where all possible positions a cell can have are the indexes,
+        while their cartesian coordinates are the values. *)
     let all_pos_arr =
         let i_to_xy acc i = acc.(i) <- xy_of_idx i; acc in
         let placeholder_arr = Array.make cell_qty (-1, -1) in
@@ -61,9 +59,8 @@ module Game(Params : GameParams) : Game = struct
         |> IntSet.elements
         |> List.fold i_to_xy placeholder_arr 
 
-
-    (** generates a new cell with a value between 0 and 1 
-        on any random empty space *)
+    (** Generates a new cell with a value between 0 and 1 
+        on any random empty spaces. *)
     let generate_cell game =
         let empty_pos =
             game
@@ -81,8 +78,7 @@ module Game(Params : GameParams) : Game = struct
         let value = if Random.int 16 = 0 then 1 else 0 in
         { value ; position }::game
 
-
-    (** receives a game structure and returns its current state *)
+    (** Receives a game structure and returns its current state. *)
     let get_state game =
         let max_length = List.length game = 16 in
         if not max_length
@@ -129,15 +125,11 @@ module Game(Params : GameParams) : Game = struct
         then Won
         else Playing
 
-
-    (** creates a new game with a single random cell *)
+    (** Creates a new game with a single random cell. *)
     let new_game () = generate_cell empty_game
 
-
-    (** moves all cells into the given direction,
-        generates a new cell,
-        and returns the new game state
-     *)
+    (** Moves all cells into the given direction,generates a new cell,
+        and returns a tuple of the new cells and the game state. *)
     let move dir game =
         let axis =
             match dir with
