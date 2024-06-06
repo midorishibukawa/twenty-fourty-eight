@@ -1,7 +1,6 @@
 open Batteries
 
 module IntSet = Set.Make(Int)
-module IntMap = Map.Make(Int)
 
 module type Game = sig
     type direction = Up | Down | Left | Right
@@ -55,11 +54,12 @@ module Game(Params : GameParams) : Game = struct
 
     (** map where all possible positions a cell can have are the keys,
         while their cartesian coordinates are the values *)
-    let all_pos_map =
-        let i_to_xy acc i = IntMap.add i (xy_of_idx i) acc in
+    let all_pos_arr =
+        let i_to_xy acc i = acc.(i) <- xy_of_idx i; acc in
+        let placeholder_arr = Array.make cell_qty (-1, -1) in
         all_pos_set
         |> IntSet.elements
-        |> List.fold i_to_xy IntMap.empty
+        |> List.fold i_to_xy placeholder_arr 
 
 
     (** generates a new cell with a value between 0 and 1 
@@ -84,17 +84,16 @@ module Game(Params : GameParams) : Game = struct
 
     (** receives a game structure its current state *)
     let get_state game =
-        let game_won ?(state=Playing) game =
+        let max_length = List.length game = 16 in
+        if not max_length
+        then 
             let max = 
                 game 
                 |> List.map get_val
                 |> List.max in
             if max >= 9
             then Won
-            else state in
-        let max_length = List.length game = 16 in
-        if not max_length
-        then game_won game
+            else Playing
         else
         let check_cells game (max, over) cell =
             let { value ; position } = cell in
@@ -144,10 +143,10 @@ module Game(Params : GameParams) : Game = struct
             match dir with
             | Left | Right -> Horizontal
             | Up   | Down  -> Vertical in
-        let line_arr = Array.init Params.size (fun _ -> []) in
+        let line_arr = Array.make Params.size [] in
         let update_arr arr { value ; position } = 
             let select_i (x, y) = if axis = Vertical then x else y in
-            let i = IntMap.find position all_pos_map |> select_i in
+            let i = select_i all_pos_arr.(position) in
             arr.(i) <- value::arr.(i);
             arr in
         let is_rev = dir = Down || dir = Right in
@@ -168,10 +167,10 @@ module Game(Params : GameParams) : Game = struct
                     let acc = { value = value_a + accd ; position }::acc in
                     let j = j + 1 in
                     arr_to_cells ~acc ~j i values''
-            | value::values'' -> 
+            | value::values' -> 
                     let acc = { value ; position }::acc in
                     let j = j + 1 in
-                    arr_to_cells ~acc ~j i values''
+                    arr_to_cells ~acc ~j i values'
             in
         let set_of_game = IntSet.of_list % List.map get_pos  in
         let game_set = set_of_game game in
