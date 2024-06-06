@@ -17,12 +17,12 @@ let left_col = ( * ) size
 
 let map2cell value position = Game.({ value ; position })
 
-let test_move dir ?(cell_qty=size) starting_f expected_f =
+let test_move dir ?(cell_qty=size) ?(expected_state=Game.Playing) starting_f expected_f =
     let positions = List.init GameParams.size starting_f in
     let expected = List.init GameParams.size expected_f |> IntSet.of_list in
     let values = List.make GameParams.size 0 in
     let game = List.map2 map2cell values positions in
-    let game', _ = Game.move dir game in
+    let game', state = Game.move dir game in
     let assert_length = List.length game' = cell_qty in
     let check_val Game.({ value ; _ }) = value = 0 || value = 1 in 
     let assert_values = List.for_all check_val game' in
@@ -30,10 +30,11 @@ let test_move dir ?(cell_qty=size) starting_f expected_f =
         let get_pos Game.({ position ; _ }) = position in
         let actual = game' |> List.map get_pos |> IntSet.of_list in
         IntSet.subset expected actual in
+    let assert_state = expected_state = state in
     assert_length
     && assert_values
     && assert_positions
-
+    && assert_state
 
 let%test "new_game" = 
     let game = Game.new_game () in
