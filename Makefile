@@ -7,6 +7,9 @@ build_static:
 dev:
 	nix develop -c $$SHELL
 
+doc:
+	dune build @doc
+
 run:
 	dune build
 	dune exec twenty_fourty_eight 

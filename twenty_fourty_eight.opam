@@ -12,10 +12,10 @@ bug-reports: "https://gitlab.com/midorishibukawa/twenty-fourty-eight/-/issues"
 depends: [
   "batteries"
   "dune" {>= "3.12"}
-  "bisect_ppx"
+  "bisect_ppx" #{with-test}
   "ocaml"
-  "ppx_inline_test"
-  "odoc"
+  "ppx_inline_test" #{with-test}
+  "odoc" #{with-doc}
 ]
 build: [
   ["dune" "subst"] {dev}
