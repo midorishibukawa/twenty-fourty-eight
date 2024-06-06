@@ -15,13 +15,13 @@ build_n_test:
   extends: .before_script_cachix
   coverage: '/Coverage: \d*\/\d* \((.*)%\)/'
   artifacts:
+    paths:
+      - public
+      - twenty_fourty_eight
     reports:
       coverage_report:
         coverage_format: cobertura
         path: cobertura.xml
-    paths:
-      - twenty_fourty_eight
-      - public
   script:
     - cachix watch-exec $CACHIX_CACHE_NAME -- nix build .#prd
     - cp result/bin/$PROJECT_NAME .
