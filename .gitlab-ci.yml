@@ -3,8 +3,7 @@ stages:
   - build_bin
 variables:
   CACHIX_CACHE_NAME: midorishibukawa-ml
-  PROJECT_NAME: twenty_fourty_eight 
-  IMAGE_TAG: 0.day9
+  PROJECT_NAME: twenty_fourty_eight
   
 .before_script_cachix:
   before_script:
@@ -22,9 +21,12 @@ build_n_test:
         path: cobertura.xml
     paths:
       - twenty_fourty_eight
+      - public
   script:
     - cachix watch-exec $CACHIX_CACHE_NAME -- nix build .#prd
-    - cp ./result/bin/$PROJECT_NAME .
+    - cp result/bin/$PROJECT_NAME .
     - export BISECT_FILE=${PWD}/cobertura
     - cachix watch-exec $CACHIX_CACHE_NAME -- nix develop -c make test
-    - nix develop -c bisect-ppx-report cobertura cobertura.xml
+    - cachix watch-exec $CACHIX_CACHE_NAME -- nix develop -c bisect-ppx-report cobertura cobertura.xml
+    - cachix watch-exec $CACHIX_CACHE_NAME --  nix develop -c make doc
+    - mkdir -p public && cp -r _build/default/_doc/_html/* public
