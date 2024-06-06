@@ -1,6 +1,8 @@
 open Twenty_fourty_eight
 open Batteries
 
+module IntSet = Set.Make(Int)
+
 let size = 4
 
 module GameParams : GameParams = struct
