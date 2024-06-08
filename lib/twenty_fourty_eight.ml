@@ -8,7 +8,7 @@ module type Game = sig
     type cell = { value : int ; position : int } 
     type t = cell list
     val new_game : unit -> t
-    val move : direction -> t -> t * state
+    val move : direction -> t -> t * state * int
 end
 
 module type GameParams = sig
@@ -40,7 +40,6 @@ module Game(Params : GameParams) : Game = struct
     let get_pos { position ; _ } = position
 
     (** Receives a cell and returns its value. *)
-    let get_val { value ; _ } = value
     let rec xy_of_idx ?(y=0) x =
         if x < Params.size
         then x, y
@@ -79,19 +78,8 @@ module Game(Params : GameParams) : Game = struct
         { value ; position }::game
 
     (** Receives a game structure and returns its current state. *)
-    let get_state game =
-        let max_length = List.length game = 16 in
-        if not max_length
-        then 
-            let max = 
-                game 
-                |> List.map get_val
-                |> List.max in
-            if max >= 9
-            then Won
-            else Playing
-        else
-        let check_cells game (max, over) cell =
+    let get_state_score game =
+        let check_cells game (max, score, over) cell =
             let { value ; position } = cell in
             let x, y = xy_of_idx position in
             let are_coordinates_valid (x, y) (dx, dy) = 
@@ -110,20 +98,22 @@ module Game(Params : GameParams) : Game = struct
                 |> List.filter_map @@ are_coordinates_valid (x, y)
                 |> List.map @@ Array.get game % idx_of_xy
                 |> List.for_all cant_move_in_dir in
-            Int.max max value, no_moves && over in
+            Int.max max value, score + (Int.pow 2 (value + 1)), no_moves && over in
         let game_arr =
             let opt_arr = Array.make cell_qty None in
             let update_pos acc { value ; position } =
                 acc.(position) <- Some value;
                 acc in
             List.fold update_pos opt_arr game in
-        let max, over = 
-            List.fold_left (check_cells game_arr) (0, true) game in
-        if over
-        then Over
-        else if max >= 9
-        then Won
-        else Playing
+        let max, score, over = 
+            List.fold_left (check_cells game_arr) (0, 0, true) game in
+        let state = 
+            if over
+            then Over
+            else if max >= 10
+            then Won
+            else Playing in 
+        state, score
 
     (** Creates a new game with a single random cell. *)
     let new_game () = generate_cell empty_game
@@ -179,5 +169,6 @@ module Game(Params : GameParams) : Game = struct
             |> List.flatten
             |> generate_cell_if_moved
             |> List.sort (fun a b -> a.position - b.position) in
-        game', get_state game'
+        let state, score = get_state_score game' in
+        game', state, score
 end

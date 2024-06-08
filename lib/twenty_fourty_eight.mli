@@ -20,7 +20,7 @@ module type Game = sig
     
     (** Moves all cells into the given direction,generates a new cell,
         and returns a tuple of the new cells and the game state. *)
-    val move : direction -> t -> t * state
+    val move : direction -> t -> t * state * int
 end
 
 module type GameParams = sig
