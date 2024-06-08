@@ -3,3 +3,5 @@ result
 *.coverage
 _coverage/
 cobertura.xml
+.direnv
+twenty_fourty_eight

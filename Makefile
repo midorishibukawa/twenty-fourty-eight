@@ -1,7 +1,12 @@
 build:
 	nix build
 
-build_static:
+build-docker:
+	nix build .#prd && \
+	nix-build image.nix && \
+	docker load < result
+
+build-static:
 	nix build .#prd
 
 dev:
